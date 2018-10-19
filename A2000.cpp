@@ -32,12 +32,11 @@ class Node
 public:
     string word;
     vector <Count> count;
-    vector <uint32_t> order;
     bool sorted;
     
     Node(const string& world);
     void addEdge(const uint32_t end);
-    friend ostream& operator<<(ostream& o, const Node& n);
+    friend ostream& operator<<(ostream& o, Node& n);
 };
 
 class A2000 {
@@ -46,12 +45,12 @@ public:
     array<uint32_t, SIZE> hash_table;
 
     A2000(const string&);
+    void process(string&); // process one sentence
+    void say(); // write sentence to stdout
     
     static uint32_t hash(const string&);
-    void process(string&);
     uint32_t process(const uint32_t start, const uint32_t end);
     uint32_t index(const char* world, const size_t len);
-    void say();
     void addEdge(const uint32_t start, const uint32_t end);
     
     friend ostream& operator<<(ostream& o, const A2000&);
@@ -61,7 +60,7 @@ public:
 
 ostream& operator<<(ostream& o, const Count& c)
 {
-    o << A2000::node[c.idx].word << ' ' << c.idx << ' ' << c.count;
+    o << A2000::node[c.idx].word /* << ' ' << c.idx */ << ' ' << c.count;
     return o;
 }
 
@@ -73,9 +72,12 @@ bool Count::operator<(const Count& y) const
 
 // class Node
 
-ostream& operator<<(ostream& o, const Node& n)
+ostream& operator<<(ostream& o, Node& n)
 {
     o << n.word << endl;
+    if (!n.sorted)
+        sort(n.count.begin(), n.count.end(), [](const Count& x, const Count& y) {return y < x;});
+    n.sorted = true;
     for(uint32_t i = 0; i < n.count.size(); ++i)
         o << '\t' << n.count[i] << endl;
     return o;
@@ -114,17 +116,18 @@ ostream& operator<<(ostream& o, const A2000& a)
     return o;
 }
 
-uint32_t A2000::hash(const string& s) 
-{
-    return std::hash<std::string>{}(s) % PRIME; 
-}
 
 A2000::A2000(const string& name = "Automaton2000") 
 {
     hash_table.fill(0);
     assert (_AUTOMATON_ == index(&(name[0]), name.length()));
-    assert (_START_ == index("_START_", sizeof("_START_")));
-    assert (_END_ == index("_END_", sizeof("_END_")));
+    assert (_START_ == index("_START_", sizeof("_START_") - 1));
+    assert (_END_ == index("_END_", sizeof("_END_") - 1));
+}
+
+uint32_t A2000::hash(const string& s) 
+{
+    return std::hash<std::string>{}(s) % PRIME; 
 }
 
 void A2000::process(string& line) 
@@ -215,4 +218,6 @@ int main()
         getline(cin, line);
         a.process(line);
     }
+//    a.say();
+    cerr << a;
 }
